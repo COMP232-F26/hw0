@@ -1,0 +1,80 @@
+# .github/workflows/rename-student-class.yml
+#
+# Place this file in your GitHub Classroom TEMPLATE repository at
+# .github/workflows/rename-student-class.yml
+#
+# What it does:
+#   When GitHub Classroom creates a student's repo from the template and
+#   pushes the initial commit, this workflow fires, looks at the repo name
+#   (which ends in the student's last name if you enabled "use roster
+#   identifier for repo name" in the assignment settings), renames
+#   src/Placeholder.java -> src/<LastName>.java, and updates the class
+#   name inside it to match. It then commits that change back to the repo.
+#
+# Requirements:
+#   1. Your template repo has a placeholder file, e.g. src/Placeholder.java:
+#        public class Placeholder {
+#            public static void main(String[] args) {
+#                System.out.println("Hello, world!");
+#            }
+#        }
+#   2. In the template repo settings -> Actions -> General -> Workflow
+#      permissions, set "Read and write permissions" so the workflow can
+#      push a commit back. (Student repos inherit this from the template
+#      only if Actions are enabled by default for the org/classroom; if
+#      not, students may need to click "I understand, enable Actions".)
+#   3. ASSIGNMENT_SLUG below must match the slug GitHub Classroom uses,
+#      i.e. everything in the repo name BEFORE the trailing -<identifier>.
+#      You can see this in the repo name itself once a student accepts.
+
+name: Rename student class file
+
+on:
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: write
+
+jobs:
+  rename:
+    # Only run if the placeholder still exists, so this doesn't loop
+    # forever re-triggering itself on the commit it makes.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rename placeholder based on last name in repo name
+        env:
+          ASSIGNMENT_SLUG: "hw0"   # <-- change this to your assignment's slug
+        run: |
+          set -e
+
+          if [ ! -f "src/Placeholder.java" ]; then
+            echo "No placeholder found, nothing to do."
+            exit 0
+          fi
+
+          REPO_NAME="${GITHUB_REPOSITORY##*/}"   # e.g. hw1-Smith
+          RAW_IDENTIFIER="${REPO_NAME#${ASSIGNMENT_SLUG}-}"  # e.g. Smith
+
+          # Sanitize into a valid Java identifier: strip anything that
+          # isn't a letter/digit/underscore, capitalize first letter.
+          CLEAN=$(echo "$RAW_IDENTIFIER" | tr -cd '[:alnum:]_')
+          CLASS_NAME="$(echo "${CLEAN:0:1}" | tr '[:lower:]' '[:upper:]')${CLEAN:1}"
+
+          if [ -z "$CLASS_NAME" ]; then
+            echo "Could not derive a class name from repo name '$REPO_NAME'; leaving placeholder as-is."
+            exit 0
+          fi
+
+          echo "Renaming Placeholder -> $CLASS_NAME"
+
+          git mv "src/Placeholder.java" "src/${CLASS_NAME}.java"
+          sed -i "s/class Placeholder/class ${CLASS_NAME}/g" "src/${CLASS_NAME}.java"
+
+          git config user.name "github-classroom[bot]"
+          git config user.email "github-classroom[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Auto-generate ${CLASS_NAME}.java for student"
+          git push

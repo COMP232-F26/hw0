@@ -50,7 +50,7 @@ jobs:
         run: |
           set -e
 
-          if [ ! -f "src/Placeholder.java" ]; then
+          if [ ! -f "src/hw0/Placeholder.java" ]; then
             echo "No placeholder found, nothing to do."
             exit 0
           fi
@@ -70,8 +70,8 @@ jobs:
 
           echo "Renaming Placeholder -> $CLASS_NAME"
 
-          git mv "src/Placeholder.java" "src/${CLASS_NAME}.java"
-          sed -i "s/class Placeholder/class ${CLASS_NAME}/g" "src/${CLASS_NAME}.java"
+          git mv "src/hw0/Placeholder.java" "src/hw0/${CLASS_NAME}.java"
+          sed -i "s/class Placeholder/class ${CLASS_NAME}/g" "src/hw0/${CLASS_NAME}.java"
 
           git config user.name "github-classroom[bot]"
           git config user.email "github-classroom[bot]@users.noreply.github.com"

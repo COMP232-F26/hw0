@@ -71,7 +71,7 @@ jobs:
           echo "Renaming Placeholder -> $CLASS_NAME"
 
           git mv "src/hw0/Placeholder.java" "src/hw0/${CLASS_NAME}.java"
-          sed -i "s/class Placeholder/class ${CLASS_NAME}/g" "src/hw0/${CLASS_NAME}.java"
+          sed -i "s/Placeholder/${CLASS_NAME}/g" "src/hw0/${CLASS_NAME}.java"
 
           git config user.name "github-classroom[bot]"
           git config user.email "github-classroom[bot]@users.noreply.github.com"
